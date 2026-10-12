@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Coupons — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+  <div class="account-layout">
+    {% include 'includes/account_sidebar.html' with active='coupons' %}
+
+    <div class="account-main">
+      <h1 class="page-title">Coupons</h1>
+      <p class="muted">Apply any of these codes in your cart at checkout.</p>
+
+      {% if coupons %}
+        <div class="coupon-grid">
+          {% for coupon in coupons %}
+            <div class="coupon-card">
+              <div class="coupon-card__code">{{ coupon.code }}</div>
+              <div class="coupon-card__body">
+                <p class="coupon-card__value">
+                  {% if coupon.discount_type == 'percent' %}
+                    {{ coupon.value|floatformat:0 }}% OFF
+                  {% else %}
+                    ₹{{ coupon.value }} OFF
+                  {% endif %}
+                </p>
+                {% if coupon.description %}<p class="muted">{{ coupon.description }}</p>{% endif %}
+                {% if coupon.min_order_amount %}
+                  <p class="muted">Min. order ₹{{ coupon.min_order_amount }}</p>
+                {% endif %}
+                {% if coupon.valid_to %}
+                  <p class="muted">Valid till {{ coupon.valid_to|date:"d M Y" }}</p>
+                {% endif %}
+              </div>
+              <form method="post" action="{% url 'cart:apply_coupon' %}">
+                {% csrf_token %}
+                <input type="hidden" name="code" value="{{ coupon.code }}">
+                <button type="submit" class="btn btn--small btn--secondary">Apply in cart</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <p>No active coupons right now — check back soon.</p>
+          <a href="{% url 'catalog:shop' %}" class="btn btn--primary">Continue shopping</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

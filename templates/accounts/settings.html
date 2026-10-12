@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+  <div class="account-layout">
+    {% include 'includes/account_sidebar.html' with active='settings' %}
+
+    <div class="account-main">
+      <h1 class="page-title">Settings</h1>
+
+      <div class="card">
+        <h2 class="card__title">Change password</h2>
+        <p class="muted">Passwords are stored with secure one-way hashing. Your old password is required.</p>
+        <form method="post" class="form">
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+
+          <div class="form-field">
+            <label for="id_old_password">Old password</label>
+            <input type="password" name="old_password" id="id_old_password" required>
+            {% for error in form.old_password.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field">
+            <label for="id_new_password1">New password</label>
+            <input type="password" name="new_password1" id="id_new_password1" required>
+            {% for error in form.new_password1.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field">
+            <label for="id_new_password2">Confirm new password</label>
+            <input type="password" name="new_password2" id="id_new_password2" required>
+            {% for error in form.new_password2.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <button type="submit" class="btn btn--primary">Update password</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title">Account summary</h2>
+        <ul class="summary-list">
+          <li><span>Sign-in phone</span><strong>{{ user.phone }}</strong></li>
+          <li><span>Member since</span><strong>{{ user.created_at|date:"d M Y" }}</strong></li>
+          <li><span>Saved addresses</span><strong>{{ user.addresses.count }}</strong></li>
+          <li><span>Orders placed</span><strong>{{ user.orders.count }}</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

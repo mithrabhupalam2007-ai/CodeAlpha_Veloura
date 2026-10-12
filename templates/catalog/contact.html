@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Us — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad page-pad--narrow">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="{% url 'catalog:home' %}">Home</a>
+    <span>/</span>
+    <span aria-current="page">Contact Us</span>
+  </nav>
+
+  <div class="contact-layout">
+    <div class="content-page">
+      <h1>Contact Us</h1>
+      <p>Questions about an order, sizing or returns? We reply within 24 hours, Monday to Saturday.</p>
+      <ul class="contact-details">
+        <li><strong>Email:</strong> support@veloura.example</li>
+        <li><strong>Phone:</strong> +91 98765 43210</li>
+        <li><strong>Hours:</strong> 10am – 7pm IST</li>
+      </ul>
+      <p>You can also track everything from <a href="{% url 'orders:history' %}">My Orders</a>.</p>
+    </div>
+
+    <form method="post" class="card form" novalidate>
+      {% csrf_token %}
+      <h2 class="card__title">Send a message</h2>
+
+      <div class="form-field">
+        <label for="id_name">Name</label>
+        <input type="text" name="name" id="id_name" value="{{ form.name.value|default:'' }}" required>
+        {% for error in form.name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      </div>
+      <div class="form-field">
+        <label for="id_email">Email</label>
+        <input type="email" name="email" id="id_email" value="{{ form.email.value|default:'' }}" required>
+        {% for error in form.email.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      </div>
+      <div class="form-field">
+        <label for="id_subject">Subject</label>
+        <input type="text" name="subject" id="id_subject" value="{{ form.subject.value|default:'' }}" required>
+        {% for error in form.subject.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      </div>
+      <div class="form-field">
+        <label for="id_message">Message</label>
+        <textarea name="message" id="id_message" rows="5" required>{{ form.message.value|default_if_none:'' }}</textarea>
+        {% for error in form.message.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      <button type="submit" class="btn btn--primary">Send message</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

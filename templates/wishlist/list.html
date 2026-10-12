@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Wishlist — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+  <div class="account-layout">
+    {% include 'includes/account_sidebar.html' with active='wishlist' %}
+
+    <div class="account-main">
+      <h1 class="page-title">My Wishlist</h1>
+
+      {% if items %}
+        <div class="wishlist-grid">
+          {% for item in items %}
+            <article class="wishlist-card">
+              <a href="{{ item.product.get_absolute_url }}" class="wishlist-card__media">
+                {% with image=item.product.images.first %}
+                  {% if image %}
+                    <img src="{{ image.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+                  {% else %}
+                    <div class="product-card__placeholder">{{ item.product.name }}</div>
+                  {% endif %}
+                {% endwith %}
+              </a>
+              <div class="wishlist-card__body">
+                <p class="product-card__category">{{ item.product.category.name }}</p>
+                <h3><a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a></h3>
+                <div class="product-card__price">
+                  <span class="price-now">₹{{ item.product.discounted_price }}</span>
+                  {% if item.product.discount_percent %}
+                    <span class="price-was">₹{{ item.product.price }}</span>
+                  {% endif %}
+                </div>
+                {% if not item.product.is_in_stock %}
+                  <p class="field-error">Out of stock</p>
+                {% endif %}
+                <div class="wishlist-card__actions">
+                  <form method="post" action="{% url 'wishlist:move' item.product.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--small btn--primary"
+                            {% if not item.product.is_in_stock %}disabled{% endif %}>
+                      Move to Cart
+                    </button>
+                  </form>
+                  <form method="post" action="{% url 'wishlist:remove' item.product.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--small btn--ghost">Remove</button>
+                  </form>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <h2>Your wishlist is empty</h2>
+          <p>Tap the ♡ on any product to save it for later.</p>
+          <a href="{% url 'catalog:shop' %}" class="btn btn--primary">Discover fashion</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

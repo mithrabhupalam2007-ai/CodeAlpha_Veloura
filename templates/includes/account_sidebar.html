@@ -1,0 +1,22 @@
+{% comment %}Sidebar shared by all account pages. Expects: active{% endcomment %}
+<aside class="account-sidebar">
+  <div class="account-sidebar__head">
+    <span class="avatar">{{ user.full_name|first|upper }}</span>
+    <div>
+      <strong>{{ user.full_name }}</strong>
+      <p>{{ user.phone }}</p>
+    </div>
+  </div>
+  <nav class="account-nav" aria-label="Account">
+    <a href="{% url 'orders:history' %}" class="{% if active == 'orders' %}is-active{% endif %}">My Orders</a>
+    <a href="{% url 'accounts:coupons' %}" class="{% if active == 'coupons' %}is-active{% endif %}">Coupons</a>
+    <a href="{% url 'accounts:payments' %}" class="{% if active == 'payments' %}is-active{% endif %}">Payments</a>
+    <a href="{% url 'accounts:profile' %}" class="{% if active == 'account' %}is-active{% endif %}">Manage Account</a>
+    <a href="{% url 'wishlist:list' %}" class="{% if active == 'wishlist' %}is-active{% endif %}">Wishlist</a>
+    <a href="{% url 'accounts:settings' %}" class="{% if active == 'settings' %}is-active{% endif %}">Settings</a>
+    <form method="post" action="{% url 'accounts:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="account-nav__logout">Logout</button>
+    </form>
+  </nav>
+</aside>

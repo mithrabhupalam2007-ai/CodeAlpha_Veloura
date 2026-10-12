@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+  <h1 class="page-title">Checkout</h1>
+
+  <div class="checkout-layout">
+    {# ---------------- Delivery form ---------------- #}
+    <form method="post" class="checkout-form card" novalidate>
+      {% csrf_token %}
+
+      <h2 class="card__title">Delivery details</h2>
+
+      {% if form.non_field_errors %}
+        <div class="form-errors">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="form form--grid">
+        <div class="form-field">
+          <label for="id_full_name">Full name</label>
+          <input type="text" name="full_name" id="id_full_name"
+                 value="{{ form.full_name.value|default:'' }}" required>
+          {% for error in form.full_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="form-field">
+          <label for="id_phone">Phone number</label>
+          <input type="text" name="phone" id="id_phone" inputmode="numeric"
+                 value="{{ form.phone.value|default:'' }}" required>
+          {% for error in form.phone.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="form-field form-field--full">
+          <label for="id_address_line1">House no., street</label>
+          <input type="text" name="address_line1" id="id_address_line1"
+                 value="{{ form.address_line1.value|default:'' }}" required>
+          {% for error in form.address_line1.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="form-field form-field--full">
+          <label for="id_address_line2">Area, landmark</label>
+          <input type="text" name="address_line2" id="id_address_line2"
+                 value="{{ form.address_line2.value|default:'' }}">
+        </div>
+        <div class="form-field">
+          <label for="id_city">City</label>
+          <input type="text" name="city" id="id_city"
+                 value="{{ form.city.value|default:'' }}" required>
+          {% for error in form.city.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="form-field">
+          <label for="id_state">State</label>
+          <input type="text" name="state" id="id_state"
+                 value="{{ form.state.value|default:'' }}" required>
+          {% for error in form.state.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="form-field">
+          <label for="id_pincode">PIN code</label>
+          <input type="text" name="pincode" id="id_pincode" inputmode="numeric"
+                 value="{{ form.pincode.value|default:'' }}" required>
+          {% for error in form.pincode.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="id_customer_note">Order note (optional)</label>
+        <textarea name="customer_note" id="id_customer_note" rows="2"
+                  placeholder="Delivery instructions…">{{ form.customer_note.value|default_if_none:'' }}</textarea>
+      </div>
+
+      <h2 class="card__title">Payment method</h2>
+      <div class="payment-options">
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="cod" checked>
+          <span>
+            <strong>Cash on Delivery</strong>
+            <em>Pay when your order arrives — no online payment needed.</em>
+          </span>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="demo">
+          <span>
+            <strong>Demo Online Payment</strong>
+            <em>Sandbox mode — no real money is charged. Gateway integration comes later.</em>
+          </span>
+        </label>
+      </div>
+      {% for error in form.payment_method.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+
+      <button type="submit" class="btn btn--accent btn--block btn--large">
+        Place Order · ₹{{ total }}
+      </button>
+      <p class="muted note">
+        By placing this order you agree to our <a href="{% url 'catalog:page' 'terms' %}">Terms of Service</a>.
+        Stock and prices are re-validated on the server before confirmation.
+      </p>
+    </form>
+
+    {# ---------------- Order summary ---------------- #}
+    <aside class="order-summary card">
+      <h2>Your Order</h2>
+
+      <ul class="checkout-items">
+        {% for item in items %}
+          <li>
+            <span class="checkout-items__qty">{{ item.quantity }}×</span>
+            <div>
+              <p>{{ item.product.name }}</p>
+              <p class="muted">
+                {% if item.size %}{{ item.size }}{% endif %}
+                {% if item.color %} · {{ item.color }}{% endif %}
+              </p>
+            </div>
+            <strong>₹{{ item.line_total }}</strong>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <dl class="summary-list">
+        <div><dt>Subtotal</dt><dd>₹{{ subtotal }}</dd></div>
+        {% if discount %}
+          <div class="summary-list--saving">
+            <dt>{% if coupon %}Coupon {{ coupon.code }}{% else %}Discount{% endif %}</dt>
+            <dd>−₹{{ discount }}</dd>
+          </div>
+        {% endif %}
+        <div><dt>Shipping</dt><dd>{% if shipping %}₹{{ shipping }}{% else %}FREE{% endif %}</dd></div>
+        <div class="summary-list--total"><dt>Total</dt><dd>₹{{ total }}</dd></div>
+      </dl>
+
+      <a href="{% url 'cart:detail' %}" class="link-arrow">← Edit cart</a>
+    </aside>
+  </div>
+</section>
+{% endblock %}

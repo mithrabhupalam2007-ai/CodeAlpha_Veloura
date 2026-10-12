@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="{% url 'catalog:home' %}">Home</a>
+    <span>/</span>
+    <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a>
+    <span>/</span>
+    <span aria-current="page">{{ product.name }}</span>
+  </nav>
+
+  <div class="product-detail">
+
+    {# ---------------- Gallery ---------------- #}
+    <div class="gallery">
+      <div class="gallery__main">
+        {% if product.discount_percent %}
+          <span class="product-card__tag">-{{ product.discount_percent }}%</span>
+        {% endif %}
+        {% if images %}
+          <img id="gallery-main-img" src="{{ images.0.image.url }}" alt="{{ images.0.label }}">
+        {% else %}
+          <div class="product-card__placeholder product-card__placeholder--large">{{ product.name }}</div>
+        {% endif %}
+      </div>
+      {% if images|length > 1 %}
+        <div class="gallery__thumbs">
+          {% for image in images %}
+            <button type="button" class="gallery__thumb {% if forloop.first %}is-active{% endif %}"
+                    data-full="{{ image.image.url }}" aria-label="View {{ image.label }}">
+              <img src="{{ image.image.url }}" alt="{{ image.label }}" loading="lazy">
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    {# ---------------- Info + buy box ---------------- #}
+    <div class="product-info">
+      <p class="product-info__category">{{ product.category.name }}</p>
+      <h1 class="product-info__title">{{ product.name }}</h1>
+
+      <div class="product-info__rating">
+        {% if avg_rating %}
+          <span class="stars">{% for i in "12345" %}{% if forloop.counter <= avg_rating|floatformat:0 %}★{% else %}☆{% endif %}{% endfor %}</span>
+          <a href="#reviews" class="muted">{{ avg_rating|floatformat:1 }} · {{ review_count }} review{{ review_count|pluralize }}</a>
+        {% else %}
+          <span class="muted">No reviews yet — be the first</span>
+        {% endif %}
+      </div>
+
+      <div class="product-info__price">
+        <span class="price-now price--large">₹{{ product.discounted_price }}</span>
+        {% if product.discount_percent %}
+          <span class="price-was">₹{{ product.price }}</span>
+          <span class="pill pill--save">Save ₹{{ product.discount_amount }}</span>
+        {% endif %}
+      </div>
+
+      <p class="product-info__desc">{{ product.description|linebreaksbr }}</p>
+
+      <form method="post" action="{% url 'cart:add' %}" id="buy-form" class="buy-box">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" value="{{ product.pk }}">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+        {% if sizes %}
+          <div class="buy-box__group">
+            <label>Size
+              <button type="button" class="link-btn" onclick="document.getElementById('size-guide').showModal()">Size guide</button>
+            </label>
+            <div class="chip-row" role="radiogroup" aria-label="Size">
+              {% for size in sizes %}
+                <label class="chip {% if forloop.first %}is-active{% endif %}">
+                  <input type="radio" name="size" value="{{ size }}" {% if forloop.first %}checked{% endif %} required>
+                  <span>{{ size }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if colors %}
+          <div class="buy-box__group">
+            <label>Colour</label>
+            <div class="chip-row" role="radiogroup" aria-label="Colour">
+              {% for color in colors %}
+                <label class="chip {% if forloop.first %}is-active{% endif %}">
+                  <input type="radio" name="color" value="{{ color }}" {% if forloop.first %}checked{% endif %} required>
+                  <span>{{ color }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="buy-box__row">
+          <div class="qty-stepper" aria-label="Quantity">
+            <button type="button" data-qty="-1" aria-label="Decrease quantity">−</button>
+            <input type="number" name="quantity" id="qty-input" value="1" min="1" max="{{ product.stock }}" >
+            <button type="button" data-qty="1" aria-label="Increase quantity">+</button>
+          </div>
+          <p class="stock-label {% if product.is_in_stock %}in-stock{% else %}out-stock{% endif %}">
+            {% if product.is_in_stock %}
+              ✓ In stock ({{ product.stock }} available)
+            {% else %}
+              ✕ Out of stock
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="buy-box__actions">
+          <button type="submit" class="btn btn--primary btn--large" {% if not product.is_in_stock %}disabled{% endif %}>
+            Add to Cart
+          </button>
+          <button type="submit" class="btn btn--accent btn--large" name="buy_now" value="1"
+                  formaction="{% url 'cart:add' %}"
+                  {% if not product.is_in_stock %}disabled{% endif %}>
+            Buy Now
+          </button>
+        </div>
+      </form>
+
+      <form method="post" action="{% url 'wishlist:add' product.pk %}" class="wishlist-line">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--ghost btn--block">♡ Save to Wishlist</button>
+      </form>
+
+      <ul class="trust-list">
+        <li>Free shipping above ₹1499</li>
+        <li>7-day easy returns</li>
+        <li>Cash on Delivery available</li>
+      </ul>
+    </div>
+  </div>
+
+  {# ---------------- Reviews ---------------- #}
+  <section class="reviews" id="reviews">
+    <div class="section-head">
+      <h2>Customer Reviews</h2>
+      <p class="muted">{{ review_count }} review{{ review_count|pluralize }}</p>
+    </div>
+
+    <div class="reviews__layout">
+      <div class="reviews__list">
+        {% for review in reviews %}
+          <article class="review">
+            <header>
+              <span class="avatar avatar--small">{{ review.user.full_name|first|upper }}</span>
+              <div>
+                <strong>{{ review.user.full_name }}</strong>
+                <p class="muted">{{ review.created_at|date:"d M Y" }}</p>
+              </div>
+              <span class="stars">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+            </header>
+            {% if review.comment %}<p>{{ review.comment }}</p>{% endif %}
+          </article>
+        {% empty %}
+          <p class="muted">No reviews yet. Share how this piece fits you!</p>
+        {% endfor %}
+      </div>
+
+      <div class="reviews__form card">
+        <h3>{% if user_review %}Update your review{% else %}Write a review{% endif %}</h3>
+        <form method="post" action="{% url 'catalog:submit_review' product.slug %}">
+          {% csrf_token %}
+          <div class="form-field">
+            <label for="id_rating">Rating</label>
+            <select name="rating" id="id_rating" required>
+              <option value="">Choose…</option>
+              {% for value, label in review_form.fields.rating.choices %}
+                <option value="{{ value }}" {% if user_review.rating == value %}selected{% endif %}>{{ label }} star{{ label|pluralize }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="id_comment">Review</label>
+            <textarea name="comment" id="id_comment" rows="4"
+                      placeholder="Share fit, fabric and quality feedback…">{{ review_form.comment.value|default_if_none:'' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn--primary">Submit review</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  {# ---------------- Related ---------------- #}
+  {% if related_products %}
+    <section class="section">
+      <div class="section-head">
+        <h2>You may also like</h2>
+      </div>
+      <div class="product-grid">
+        {% for product in related_products %}
+          {% include 'includes/product_card.html' with product=product %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</section>
+
+{# ---------------- Size guide modal ---------------- #}
+<dialog id="size-guide" class="modal">
+  <h3>Size Guide</h3>
+  <table class="data-table data-table--compact">
+    <thead>
+      <tr><th>Size</th><th>Bust (in)</th><th>Waist (in)</th><th>Hip (in)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>XS</td><td>32</td><td>26</td><td>35</td></tr>
+      <tr><td>S</td><td>34</td><td>28</td><td>37</td></tr>
+      <tr><td>M</td><td>36</td><td>30</td><td>39</td></tr>
+      <tr><td>L</td><td>38</td><td>32</td><td>41</td></tr>
+      <tr><td>XL</td><td>40</td><td>34</td><td>43</td></tr>
+      <tr><td>XXL</td><td>42</td><td>36</td><td>45</td></tr>
+    </tbody>
+  </table>
+  <button type="button" class="btn btn--secondary" onclick="this.parentElement.close()">Close</button>
+</dialog>
+{% endblock %}

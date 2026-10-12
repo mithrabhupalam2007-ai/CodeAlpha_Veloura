@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page.title }} — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad page-pad--narrow">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="{% url 'catalog:home' %}">Home</a>
+    <span>/</span>
+    <span aria-current="page">{{ page.title }}</span>
+  </nav>
+
+  <article class="content-page">
+    <h1>{{ page.title }}</h1>
+    {% for para in page.body %}
+      <p>{{ para }}</p>
+    {% endfor %}
+  </article>
+
+  <div class="content-page__cta">
+    <a href="{% url 'catalog:contact' %}" class="btn btn--secondary">Contact support</a>
+    <a href="{% url 'catalog:shop' %}" class="btn btn--ghost">Continue shopping</a>
+  </div>
+</section>
+{% endblock %}

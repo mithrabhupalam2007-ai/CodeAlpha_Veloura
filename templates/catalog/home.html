@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Veloura — Elegant Women's Fashion{% endblock %}
+
+{% block content %}
+
+{# ---------------- Hero ---------------- #}
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="hero__copy">
+      <p class="eyebrow">Autumn / Winter Collection</p>
+      <h1>Elegance, woven<br>for <em>every</em> you.</h1>
+      <p class="hero__sub">
+        Discover dresses, ethnic wear and power dressing crafted for women
+        of all ages — luxurious fabrics, flattering fits, fair prices.
+      </p>
+      <div class="hero__cta">
+        <a href="{% url 'catalog:shop' %}" class="btn btn--primary btn--large">Shop the Collection</a>
+        <a href="{% url 'catalog:new_arrivals' %}" class="btn btn--ghost btn--large">New Arrivals</a>
+      </div>
+      <ul class="hero__perks">
+        <li>Free shipping over ₹1499</li>
+        <li>7-day easy returns</li>
+        <li>Cash on Delivery</li>
+      </ul>
+    </div>
+
+    <div class="hero__visual" aria-hidden="true">
+      <div class="hero__blob hero__blob--1"></div>
+      <div class="hero__blob hero__blob--2"></div>
+      <div class="hero__cards">
+        {% for product in hero_products %}
+          <a href="{{ product.get_absolute_url }}" class="hero-card" style="--i: {{ forloop.counter0 }}">
+            {% with image=product.images.first %}
+              {% if image %}<img src="{{ image.image.url }}" alt="{{ product.name }}">{% endif %}
+            {% endwith %}
+            <span>{{ product.name }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------------- Category icons ---------------- #}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Shop by Category</h2>
+      <a href="{% url 'catalog:shop' %}" class="link-arrow">View all</a>
+    </div>
+    <div class="category-grid">
+      {% for category in categories %}
+        <a href="{{ category.get_absolute_url }}" class="category-tile">
+          <span class="category-tile__media">
+            {% if category.image %}
+              <img src="{{ category.image.url }}" alt="{{ category.name }}" loading="lazy">
+            {% else %}
+              <span class="category-tile__fallback">{{ category.name|first }}</span>
+            {% endif %}
+          </span>
+          <span class="category-tile__name">{{ category.name }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ---------------- Promotional banners ---------------- #}
+<section class="section section--tight">
+  <div class="container promo-grid">
+    <div class="promo promo--lavender">
+      <p class="eyebrow">Limited time</p>
+      <h3>10% off your first order</h3>
+      <p>Use code <strong>WELCOME10</strong> at checkout.</p>
+      <a href="{% url 'catalog:shop' %}" class="btn btn--accent">Grab the deal</a>
+    </div>
+    <div class="promo promo--deep">
+      <p class="eyebrow">Festive ready</p>
+      <h3>Flat ₹200 off over ₹1999</h3>
+      <p>Use code <strong>FLAT200</strong> — ethnic wear &amp; party picks.</p>
+      <a href="{% url 'catalog:category' 'ethnic-wear' %}" class="btn btn--light">Shop Ethnic</a>
+    </div>
+    <div class="promo promo--soft">
+      <p class="eyebrow">Free delivery</p>
+      <h3>On orders above ₹1499</h3>
+      <p>ships pan-India in 3–7 days.</p>
+      <a href="{% url 'catalog:new_arrivals' %}" class="btn btn--secondary">Explore</a>
+    </div>
+  </div>
+</section>
+
+{# ---------------- New arrivals ---------------- #}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>New Arrivals</h2>
+      <a href="{% url 'catalog:new_arrivals' %}" class="link-arrow">View all</a>
+    </div>
+    <div class="product-grid">
+      {% for product in new_arrivals %}
+        {% include 'includes/product_card.html' with product=product %}
+      {% empty %}
+        <p class="muted">New pieces land every week — check back soon.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ---------------- Trending ---------------- #}
+<section class="section section--tinted">
+  <div class="container">
+    <div class="section-head">
+      <h2>Trending Collections</h2>
+      <a href="{% url 'catalog:trending' %}" class="link-arrow">View all</a>
+    </div>
+    <div class="product-grid">
+      {% for product in trending %}
+        {% include 'includes/product_card.html' with product=product %}
+      {% empty %}
+        <p class="muted">Trending picks are being updated.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ---------------- Best sellers ---------------- #}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Best Sellers</h2>
+      <a href="{% url 'catalog:shop' %}?sort=popular" class="link-arrow">View all</a>
+    </div>
+    <div class="product-grid">
+      {% for product in bestsellers %}
+        {% include 'includes/product_card.html' with product=product %}
+      {% empty %}
+        <p class="muted">Best sellers appear once orders start rolling in.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ---------------- Seasonal ---------------- #}
+<section class="section section--tinted">
+  <div class="container">
+    <div class="section-head">
+      <h2>Seasonal Collections</h2>
+    </div>
+    <div class="product-grid">
+      {% for product in seasonal %}
+        {% include 'includes/product_card.html' with product=product %}
+      {% empty %}
+        <p class="muted">Seasonal edits are on their way.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Account — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+  <div class="account-layout">
+    {% include 'includes/account_sidebar.html' with active='account' %}
+
+    <div class="account-main">
+      <h1 class="page-title">Manage Account</h1>
+
+      <div class="card">
+        <h2 class="card__title">Profile details</h2>
+        <form method="post" class="form form--grid">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="profile">
+
+          <div class="form-field">
+            <label for="id_first_name">First name</label>
+            <input type="text" name="first_name" id="id_first_name" value="{{ form.first_name.value|default:'' }}" required>
+            {% for error in form.first_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field">
+            <label for="id_last_name">Last name</label>
+            <input type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default:'' }}">
+            {% for error in form.last_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field">
+            <label for="id_email">Email</label>
+            <input type="email" name="email" id="id_email" value="{{ form.email.value|default:'' }}">
+            {% for error in form.email.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field">
+            <label for="id_phone">Phone (sign-in number)</label>
+            <input type="text" name="phone" id="id_phone" value="{{ form.phone.value|default:'' }}" required>
+            {% for error in form.phone.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <div class="form-field form-field--full">
+            <button type="submit" class="btn btn--primary">Save changes</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title">Saved addresses</h2>
+
+        {% if addresses %}
+          <ul class="address-list">
+            {% for address in addresses %}
+              <li class="address-item">
+                <div>
+                  <strong>{{ address.full_name }}</strong>
+                  {% if address.is_default %}<span class="pill">Default</span>{% endif %}
+                  <p>{{ address.single_line }}</p>
+                  <p class="muted">{{ address.phone }}</p>
+                </div>
+                <form method="post" action="{% url 'accounts:address_delete' address.pk %}"
+                      onsubmit="return confirm('Remove this address?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn--small btn--ghost">Remove</button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">You have no saved addresses yet — add one below.</p>
+        {% endif %}
+
+        <h3 class="card__subtitle">Add a new address</h3>
+        <form method="post" class="form form--grid">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="address">
+
+          <div class="form-field">
+            <label for="id_a_full_name">Full name</label>
+            <input type="text" name="full_name" id="id_a_full_name" required>
+            {% for error in address_form.full_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field">
+            <label for="id_a_phone">Phone</label>
+            <input type="text" name="phone" id="id_a_phone" required>
+            {% for error in address_form.phone.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field form-field--full">
+            <label for="id_a_line1">House / street</label>
+            <input type="text" name="line1" id="id_a_line1" required>
+            {% for error in address_form.line1.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field form-field--full">
+            <label for="id_a_line2">Area / landmark</label>
+            <input type="text" name="line2" id="id_a_line2">
+          </div>
+          <div class="form-field">
+            <label for="id_a_city">City</label>
+            <input type="text" name="city" id="id_a_city" required>
+            {% for error in address_form.city.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field">
+            <label for="id_a_state">State</label>
+            <input type="text" name="state" id="id_a_state" required>
+            {% for error in address_form.state.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field">
+            <label for="id_a_pincode">PIN code</label>
+            <input type="text" name="pincode" id="id_a_pincode" inputmode="numeric" required>
+            {% for error in address_form.pincode.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="form-field form-field--check">
+            <label><input type="checkbox" name="is_default" value="on"> Set as default address</label>
+          </div>
+
+          <div class="form-field form-field--full">
+            <button type="submit" class="btn btn--secondary">Add address</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

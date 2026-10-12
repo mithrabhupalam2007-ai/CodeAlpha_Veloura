@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Payments — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+  <div class="account-layout">
+    {% include 'includes/account_sidebar.html' with active='payments' %}
+
+    <div class="account-main">
+      <h1 class="page-title">Payments</h1>
+
+      {% if records %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Date</th>
+                <th>Method</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Reference</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for record in records %}
+                <tr>
+                  <td>
+                    <a href="{% url 'orders:detail' record.order.order_number %}">
+                      {{ record.order.order_number }}
+                    </a>
+                  </td>
+                  <td>{{ record.created_at|date:"d M Y" }}</td>
+                  <td>{{ record.get_method_display }}{% if record.is_demo %} <span class="pill pill--demo">Demo</span>{% endif %}</td>
+                  <td>₹{{ record.amount }}</td>
+                  <td><span class="status status--{{ record.status|lower }}">{{ record.status }}</span></td>
+                  <td class="muted">{{ record.reference|default:"—" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="muted note">Veloura does not store card details. Online payments run in demo mode and never charge real money.</p>
+      {% else %}
+        <div class="empty-state">
+          <p>No payments yet — your payment records will appear here after checkout.</p>
+          <a href="{% url 'catalog:shop' %}" class="btn btn--primary">Start shopping</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

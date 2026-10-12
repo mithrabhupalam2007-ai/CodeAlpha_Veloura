@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+  <div class="account-layout">
+    {% include 'includes/account_sidebar.html' with active='orders' %}
+
+    <div class="account-main">
+      <h1 class="page-title">My Orders</h1>
+
+      {% if orders %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+                <tr>
+                  <td><strong>{{ order.order_number }}</strong></td>
+                  <td>{{ order.created_at|date:"d M Y" }}</td>
+                  <td>{{ order.items.count }} item{{ order.items.count|pluralize }}</td>
+                  <td>₹{{ order.total }}</td>
+                  <td><span class="status status--{{ order.status|lower }}">{{ order.status }}</span></td>
+                  <td><a class="link-arrow" href="{% url 'orders:detail' order.order_number %}">View</a></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <h2>No orders yet</h2>
+          <p>When you place an order it will show up here with live status updates.</p>
+          <a href="{% url 'catalog:shop' %}" class="btn btn--primary">Start shopping</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

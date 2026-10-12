@@ -1,0 +1,184 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Veloura — Elegant Women's Fashion{% endblock %}</title>
+  <meta name="description" content="Veloura — elegant, feminine and modern fashion for women of all ages.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+{% if messages %}
+<div class="toast-stack" id="toast-stack" aria-live="polite">
+  {% for message in messages %}
+    <div class="toast toast--{{ message.tags }}" data-toast>
+      <span>{{ message }}</span>
+      <button class="toast__close" type="button" onclick="this.parentElement.remove()" aria-label="Dismiss">×</button>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block before_header %}{% endblock %}
+
+<header class="site-header">
+  <div class="announce">
+    <p>✨ Free shipping on orders above ₹1499 &nbsp;·&nbsp; Use code <strong>WELCOME10</strong> for 10% off</p>
+  </div>
+
+  <div class="header-main">
+    <div class="container header-main__inner">
+      <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <a href="{% url 'catalog:home' %}" class="logo" aria-label="Veloura home">
+        VELO<span>URA</span>
+      </a>
+
+      <form class="search" action="{% url 'catalog:search' %}" method="get" role="search">
+        <input type="search" name="q" value="{{ request.GET.q|default:'' }}"
+               placeholder="Search dresses, kurtis, tops…" aria-label="Search products">
+        <button type="submit" aria-label="Search">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+          </svg>
+        </button>
+      </form>
+
+      <nav class="header-actions" aria-label="Account">
+        <a href="{% url 'wishlist:list' %}" class="icon-link" title="Wishlist">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M12 21s-7.5-4.7-9.5-9A5.4 5.4 0 0 1 12 6.6 5.4 5.4 0 0 1 21.5 12c-2 4.3-9.5 9-9.5 9Z"/>
+          </svg>
+          {% if wishlist_item_count %}<span class="badge">{{ wishlist_item_count }}</span>{% endif %}
+        </a>
+        <a href="{% url 'cart:detail' %}" class="icon-link" title="Cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M6 7h15l-1.6 8.2a2 2 0 0 1-2 1.6H8.4a2 2 0 0 1-2-1.6L4.5 4H2"/>
+            <circle cx="9.5" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/>
+          </svg>
+          {% if cart_item_count %}<span class="badge">{{ cart_item_count }}</span>{% endif %}
+        </a>
+
+        <div class="profile-menu" id="profile-menu">
+          <button class="profile-menu__trigger" type="button" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7">
+              <circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>
+            </svg>
+            {% if user.is_authenticated %}<span class="profile-menu__name">{{ user.full_name|truncatechars:14 }}</span>{% endif %}
+          </button>
+          <div class="profile-menu__dropdown" role="menu">
+            <div class="profile-menu__head">
+              <strong>{{ user.full_name }}</strong>
+              <span>{{ user.phone }}</span>
+            </div>
+            <a href="{% url 'orders:history' %}" role="menuitem">My Orders</a>
+            <a href="{% url 'accounts:coupons' %}" role="menuitem">Coupons</a>
+            <a href="{% url 'accounts:payments' %}" role="menuitem">Payments</a>
+            <a href="{% url 'accounts:profile' %}" role="menuitem">Manage Account</a>
+            <a href="{% url 'wishlist:list' %}" role="menuitem">Wishlist</a>
+            <a href="{% url 'accounts:settings' %}" role="menuitem">Settings</a>
+            <form method="post" action="{% url 'accounts:logout' %}" class="profile-menu__logout">
+              {% csrf_token %}
+              <button type="submit" role="menuitem">Logout</button>
+            </form>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <nav class="main-nav" id="main-nav" aria-label="Main">
+    <div class="container main-nav__inner">
+      <a href="{% url 'catalog:home' %}" class="{% if request.resolver_match.url_name == 'home' %}is-active{% endif %}">Home</a>
+      <a href="{% url 'catalog:shop' %}" class="{% if request.resolver_match.url_name == 'shop' %}is-active{% endif %}">Shop</a>
+      <a href="{% url 'catalog:new_arrivals' %}">New Arrivals</a>
+      <a href="{% url 'catalog:trending' %}">Trending</a>
+      <a href="{% url 'wishlist:list' %}">Wishlist</a>
+      <a href="{% url 'orders:history' %}">My Orders</a>
+    </div>
+  </nav>
+
+  {% if categories %}
+  <div class="category-strip">
+    <div class="container category-strip__inner">
+      {% for category in categories %}
+        <a href="{{ category.get_absolute_url }}" class="category-chip" title="{{ category.name }}">
+          <span class="category-chip__icon">
+            {% if category.image %}
+              <img src="{{ category.image.url }}" alt="{{ category.name }}" loading="lazy">
+            {% else %}
+              <span class="category-chip__fallback">{{ category.name|first }}</span>
+            {% endif %}
+          </span>
+          <span class="category-chip__label">{{ category.name }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</header>
+
+<main class="site-main">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <section class="newsletter">
+    <div class="container newsletter__inner">
+      <div>
+        <h2>Join the Veloura list</h2>
+        <p>New drops, private sales and style notes — straight to your inbox.</p>
+      </div>
+      <form method="post" action="{% url 'catalog:newsletter' %}" class="newsletter__form">
+        {% csrf_token %}
+        <input type="email" name="email" required placeholder="Your email address" aria-label="Email address">
+        <button type="submit" class="btn btn--accent">Subscribe</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <a href="{% url 'catalog:home' %}" class="logo logo--footer">VELO<span>URA</span></a>
+      <p>Elegant, feminine, modern and luxurious fashion for women of all ages.</p>
+    </div>
+    <div>
+      <h4>Customer Support</h4>
+      <a href="{% url 'catalog:page' 'help' %}">Help Center</a>
+      <a href="{% url 'catalog:page' 'shipping' %}">Shipping &amp; Delivery</a>
+      <a href="{% url 'catalog:page' 'returns' %}">Returns &amp; Exchanges</a>
+      <a href="{% url 'catalog:contact' %}">Contact Us</a>
+    </div>
+    <div>
+      <h4>Policies</h4>
+      <a href="{% url 'catalog:page' 'privacy' %}">Privacy Policy</a>
+      <a href="{% url 'catalog:page' 'terms' %}">Terms of Service</a>
+      <a href="{% url 'catalog:page' 'about' %}">About Veloura</a>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <p>support@veloura.example</p>
+      <p>+91 98765 43210</p>
+      <p>Mon–Sat, 10am–7pm IST</p>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="container">
+      <p>© {% now "Y" %} Veloura. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

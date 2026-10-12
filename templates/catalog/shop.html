@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ heading }} — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+
+  <div class="listing-head">
+    <div>
+      <h1 class="page-title">{{ heading }}</h1>
+      {% if subtitle %}<p class="muted">{{ subtitle }}</p>{% endif %}
+      <p class="muted">{{ result_count }} product{{ result_count|pluralize }} found</p>
+    </div>
+
+    <form method="get" class="sort-form" id="sort-form">
+      {# Preserve all active filter params when sorting #}
+      {% for key, value in request.GET.items %}
+        {% if key != 'sort' and key != 'page' %}
+          <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endif %}
+      {% endfor %}
+      <label for="id_sort">Sort by</label>
+      <select name="sort" id="id_sort" onchange="this.form.submit()">
+        <option value="newest" {% if active_sort == 'newest' %}selected{% endif %}>Newest arrivals</option>
+        <option value="popular" {% if active_sort == 'popular' %}selected{% endif %}>Popularity</option>
+        <option value="price_asc" {% if active_sort == 'price_asc' %}selected{% endif %}>Price: low to high</option>
+        <option value="price_desc" {% if active_sort == 'price_desc' %}selected{% endif %}>Price: high to low</option>
+        <option value="rating" {% if active_sort == 'rating' %}selected{% endif %}>Customer rating</option>
+      </select>
+    </form>
+  </div>
+
+  <div class="listing-layout">
+
+    {# ------------------------- Filters ------------------------- #}
+    <aside class="filters" id="filters">
+      <form method="get" id="filter-form">
+        {% for key, value in request.GET.items %}
+          {% if key != 'min_price' and key != 'max_price' and key != 'size' and key != 'min_rating' and key != 'availability' and key != 'sort' and key != 'page' and key != 'color' %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}">
+          {% endif %}
+        {% endfor %}
+
+        <div class="filters__group">
+          <h3>Price range</h3>
+          <div class="price-range">
+            <input type="number" name="min_price" min="0" placeholder="Min"
+                   value="{{ form.min_price.value|default_if_none:'' }}">
+            <span>–</span>
+            <input type="number" name="max_price" min="0" placeholder="Max"
+                   value="{{ form.max_price.value|default_if_none:'' }}">
+          </div>
+        </div>
+
+        <div class="filters__group">
+          <h3>Colour</h3>
+          <div class="color-filters">
+            {% for color in filter_colors %}
+              <label class="color-chip {% if request.GET.color == color %}is-active{% endif %}">
+                <input type="radio" name="color" value="{{ color }}"
+                       {% if request.GET.color == color %}checked{% endif %}
+                       onchange="document.getElementById('filter-form').submit()">
+                <span>{{ color }}</span>
+              </label>
+            {% empty %}
+              <p class="muted">No colours available.</p>
+            {% endfor %}
+          </div>
+          {% if request.GET.color %}
+            <button type="button" class="link-btn"
+                    onclick="clearParam('color')">Clear colour</button>
+          {% endif %}
+        </div>
+
+        <div class="filters__group">
+          <h3>Size</h3>
+          <select name="size">
+            <option value="">Any size</option>
+            {% for value, label in form.fields.size.choices %}
+              {% if value %}
+                <option value="{{ value }}" {% if form.size.value == value %}selected{% endif %}>{{ label }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filters__group">
+          <h3>Rating</h3>
+          <select name="min_rating">
+            <option value="">Any rating</option>
+            <option value="4" {% if form.min_rating.value == 4 or form.min_rating.value == '4' %}selected{% endif %}>4★ &amp; above</option>
+            <option value="3" {% if form.min_rating.value == 3 or form.min_rating.value == '3' %}selected{% endif %}>3★ &amp; above</option>
+            <option value="2" {% if form.min_rating.value == 2 or form.min_rating.value == '2' %}selected{% endif %}>2★ &amp; above</option>
+          </select>
+        </div>
+
+        <div class="filters__group">
+          <h3>Availability</h3>
+          <select name="availability">
+            <option value="">All</option>
+            <option value="in" {% if form.availability.value == 'in' %}selected{% endif %}>In stock</option>
+            <option value="out" {% if form.availability.value == 'out' %}selected{% endif %}>Out of stock</option>
+          </select>
+        </div>
+
+        <div class="filters__actions">
+          <button type="submit" class="btn btn--primary btn--block">Apply filters</button>
+          <button type="button" class="btn btn--ghost btn--block" onclick="clearAllFilters()">Clear all</button>
+        </div>
+      </form>
+    </aside>
+
+    {# ------------------------- Products ------------------------- #}
+    <div class="listing-main">
+      {% if filter_errors %}
+        <div class="form-errors" role="alert">
+          {% for error in filter_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+      {% endif %}
+      <button class="filters-toggle btn btn--ghost" type="button"
+              onclick="document.getElementById('filters').classList.toggle('is-open')">
+        Filters
+      </button>
+
+      {% if products %}
+        <div class="product-grid product-grid--listing">
+          {% for product in products %}
+            {% include 'includes/product_card.html' with product=product %}
+          {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+          <nav class="pagination" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+              <a href="?{{ filter_query }}&page={{ page_obj.previous_page_number }}" class="page-link">← Prev</a>
+            {% endif %}
+            <span class="page-current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+              <a href="?{{ filter_query }}&page={{ page_obj.next_page_number }}" class="page-link">Next →</a>
+            {% endif %}
+          </nav>
+        {% endif %}
+      {% else %}
+        <div class="empty-state">
+          <h2>No products match your filters</h2>
+          <p>Try widening the price range or clearing a filter.</p>
+          <button class="btn btn--primary" onclick="clearAllFilters()">Clear all filters</button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function clearParam(name) {
+    const url = new URL(window.location);
+    url.searchParams.delete(name);
+    url.searchParams.delete('page');
+    window.location = url;
+  }
+  function clearAllFilters() {
+    const url = new URL(window.location);
+    const keep = url.searchParams.get('q');
+    window.location = url.pathname + (keep ? '?q=' + encodeURIComponent(keep) : '');
+  }
+</script>
+{% endblock %}

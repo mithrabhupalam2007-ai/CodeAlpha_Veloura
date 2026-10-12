@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ order.order_number }} — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+
+  <div class="order-confirm-head">
+    <div>
+      <p class="eyebrow">Order</p>
+      <h1 class="page-title">{{ order.order_number }}</h1>
+      <p class="muted">Placed on {{ order.created_at|date:"d F Y, h:i A" }}</p>
+    </div>
+    <span class="status status--{{ order.status|lower }} status--large">{{ order.status }}</span>
+  </div>
+
+  {% if order.status == 'Cancelled' %}
+    <div class="banner banner--error">
+      This order was cancelled. Stock has been restored and no payment is due.
+    </div>
+  {% elif order.status == 'Pending' %}
+    <div class="banner banner--info">
+      We've received your order and are confirming stock — you'll see it move to <strong>Confirmed</strong> shortly.
+    </div>
+  {% endif %}
+
+  {# Status timeline #}
+  {% if order.status != 'Cancelled' %}
+    <ol class="timeline">
+      <li class="timeline__step {% if order.status_step >= 1 %}is-done{% endif %}"><span class="timeline__dot"></span><span class="timeline__label">Pending</span></li>
+      <li class="timeline__step {% if order.status_step >= 2 %}is-done{% endif %}"><span class="timeline__dot"></span><span class="timeline__label">Confirmed</span></li>
+      <li class="timeline__step {% if order.status_step >= 3 %}is-done{% endif %}"><span class="timeline__dot"></span><span class="timeline__label">Processing</span></li>
+      <li class="timeline__step {% if order.status_step >= 4 %}is-done{% endif %}"><span class="timeline__dot"></span><span class="timeline__label">Shipped</span></li>
+      <li class="timeline__step {% if order.status_step >= 5 %}is-done{% endif %}"><span class="timeline__dot"></span><span class="timeline__label">Delivered</span></li>
+    </ol>
+  {% endif %}
+
+  <div class="order-layout">
+    <div class="order-main">
+      <div class="card">
+        <h2 class="card__title">Items</h2>
+        <ul class="checkout-items checkout-items--order">
+          {% for item in order.items.all %}
+            <li>
+              <span class="checkout-items__qty">{{ item.quantity }}×</span>
+              <div>
+                {% if item.product_id %}
+                  <p><a href="{{ item.product.get_absolute_url }}">{{ item.product_name }}</a></p>
+                {% else %}
+                  <p>{{ item.product_name }}</p>
+                {% endif %}
+                <p class="muted">
+                  {% if item.size %}Size {{ item.size }}{% endif %}
+                  {% if item.size and item.color %} · {% endif %}
+                  {% if item.color %}{{ item.color }}{% endif %}
+                   · ₹{{ item.unit_price }} each
+                </p>
+              </div>
+              <strong>₹{{ item.line_total }}</strong>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title">Delivery address</h2>
+        <p><strong>{{ order.full_name }}</strong></p>
+        <p>{{ order.address_single_line }}</p>
+        <p class="muted">{{ order.phone }}</p>
+        {% if order.customer_note %}<p class="muted">Note: {{ order.customer_note }}</p>{% endif %}
+      </div>
+    </div>
+
+    <aside class="order-sidebar">
+      <div class="card">
+        <h2 class="card__title">Payment</h2>
+        <dl class="summary-list">
+          <div><dt>Subtotal</dt><dd>₹{{ order.subtotal }}</dd></div>
+          {% if order.discount_amount %}
+            <div class="summary-list--saving">
+              <dt>Discount {% if order.coupon %}({{ order.coupon.code }}){% endif %}</dt>
+              <dd>−₹{{ order.discount_amount }}</dd>
+            </div>
+          {% endif %}
+          <div><dt>Shipping</dt><dd>{% if order.shipping_amount %}₹{{ order.shipping_amount }}{% else %}FREE{% endif %}</dd></div>
+          <div class="summary-list--total"><dt>Total</dt><dd>₹{{ order.total }}</dd></div>
+        </dl>
+
+        {% if payment %}
+          <div class="payment-box">
+            <p><strong>{{ payment.get_method_display }}</strong></p>
+            <p>
+              <span class="status status--{{ payment.status|lower }}">{{ payment.status }}</span>
+              {% if payment.is_demo %}<span class="pill pill--demo">Demo</span>{% endif %}
+            </p>
+            <p class="muted">{{ payment.reference }}</p>
+          </div>
+          {% if payment.method == 'demo' %}
+            <p class="note note--hint">Demo payment — no real money was charged.</p>
+          {% endif %}
+        {% endif %}
+
+        {% if order.can_cancel %}
+          <form method="post" action="{% url 'orders:cancel' order.order_number %}"
+                onsubmit="return confirm('Cancel this order? Stock will be restored.');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn--ghost btn--block">Cancel order</button>
+          </form>
+        {% endif %}
+
+        <a href="{% url 'orders:history' %}" class="link-arrow">← Back to my orders</a>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

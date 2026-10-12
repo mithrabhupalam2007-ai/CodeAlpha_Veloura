@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart — Veloura{% endblock %}
+
+{% block content %}
+<section class="container page-pad">
+  <h1 class="page-title">Shopping Cart</h1>
+
+  {% if items %}
+    <div class="cart-layout">
+      <div class="cart-items">
+        {% for item in items %}
+          <article class="cart-item {% if not item.is_available %}cart-item--unavailable{% endif %}">
+            <a href="{{ item.product.get_absolute_url }}" class="cart-item__media">
+              {% with image=item.product.images.first %}
+                {% if image %}<img src="{{ image.image.url }}" alt="{{ item.product.name }}">{% endif %}
+              {% endwith %}
+            </a>
+
+            <div class="cart-item__info">
+              <h3><a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a></h3>
+              {% if item.size or item.color %}
+                <p class="muted">
+                  {% if item.size %}Size {{ item.size }}{% endif %}
+                  {% if item.size and item.color %} · {% endif %}
+                  {% if item.color %}{{ item.color }}{% endif %}
+                </p>
+              {% endif %}
+              <p class="cart-item__price">₹{{ item.unit_price }} each</p>
+              {% if not item.is_available %}
+                <p class="field-error">Out of stock — remove to continue.</p>
+              {% endif %}
+            </div>
+
+            <div class="cart-item__controls">
+              <form method="post" action="{% url 'cart:update' item.pk %}" class="qty-stepper qty-stepper--small">
+                {% csrf_token %}
+                <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}"
+                        aria-label="Decrease quantity" {% if item.quantity <= 1 %}disabled{% endif %}>−</button>
+                <span class="qty-value">{{ item.quantity }}</span>
+                <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}"
+                        aria-label="Increase quantity" {% if item.quantity >= item.available_stock %}disabled{% endif %}>+</button>
+              </form>
+              {% if item.available_stock < item.quantity %}
+                <p class="field-error">Only {{ item.available_stock }} left.</p>
+              {% endif %}
+
+              <strong class="cart-item__total">₹{{ item.line_total }}</strong>
+
+              <form method="post" action="{% url 'cart:remove' item.pk %}"
+                    onsubmit="return confirm('Remove this item?');">
+                {% csrf_token %}
+                <button type="submit" class="link-btn link-btn--danger">Remove</button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+
+        <a href="{% url 'catalog:shop' %}" class="link-arrow">← Continue shopping</a>
+      </div>
+
+      {# ---------------- Summary ---------------- #}
+      <aside class="order-summary card">
+        <h2>Order Summary</h2>
+
+        <dl class="summary-list">
+          <div><dt>Subtotal</dt><dd>₹{{ subtotal }}</dd></div>
+          {% if coupon and coupon_discount %}
+            <div class="summary-list--saving">
+              <dt>Coupon {{ coupon.code }}</dt>
+              <dd>−₹{{ coupon_discount }}</dd>
+            </div>
+          {% endif %}
+          <div>
+            <dt>Shipping</dt>
+            <dd>{% if shipping %}₹{{ shipping }}{% else %}FREE{% endif %}</dd>
+          </div>
+          <div class="summary-list--total"><dt>Total</dt><dd>₹{{ total }}</dd></div>
+        </dl>
+
+        {% if shipping_gap %}
+          <p class="note note--hint">
+            Add ₹{{ shipping_gap }} more to your order for free delivery (you'd save ₹{{ shipping_needed }}).
+          </p>
+        {% endif %}
+
+        <form method="post" action="{% url 'cart:apply_coupon' %}" class="coupon-form">
+          {% csrf_token %}
+          <label for="coupon-code">Coupon code</label>
+          <div class="coupon-form__row">
+            <input type="text" name="code" id="coupon-code" placeholder="e.g. WELCOME10"
+                   value="{{ coupon.code|default:'' }}" autocomplete="off">
+            <button type="submit" class="btn btn--secondary">Apply</button>
+          </div>
+          {% if coupon_error %}<p class="field-error">{{ coupon_error }}</p>{% endif %}
+        </form>
+
+        {% if coupon %}
+          <form method="post" action="{% url 'cart:remove_coupon' %}">
+            {% csrf_token %}
+            <button type="submit" class="link-btn">Remove coupon {{ coupon.code }}</button>
+          </form>
+        {% endif %}
+
+        <a href="{% url 'orders:checkout' %}" class="btn btn--primary btn--block btn--large">Proceed to Checkout</a>
+        <p class="muted note">Prices are validated on the server at checkout.</p>
+      </aside>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <h2>Your cart is empty</h2>
+      <p>Explore the collection and add pieces you love.</p>
+      <a href="{% url 'catalog:shop' %}" class="btn btn--primary">Start shopping</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
